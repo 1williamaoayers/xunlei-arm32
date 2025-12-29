@@ -1,7 +1,7 @@
 # 项目进度与上下文记录
 
 ## Current Focus
-为玩客云 S805 (ARM32) + OpenWrt 添加迅雷支持
+代码已推送，等待 GitHub Actions 构建完成
 
 ## 目标设备
 - 玩客云一代 (Amlogic S805, Cortex-A5, 纯32位)
@@ -12,6 +12,11 @@
 - Go 守护进程编译为原生 ARM32
 - 迅雷 ARM64 二进制通过 QEMU 用户态模拟运行
 - 不用 Docker，直接部署二进制
+- 镜像托管在 GitHub Container Registry (ghcr.io)
+
+## 仓库信息
+- GitHub: https://github.com/1williamaoayers/xunlei-arm32
+- 镜像: ghcr.io/1williamaoayers/xunlei-arm32:latest
 
 ## 任务清单
 
@@ -28,12 +33,13 @@
 - [x] 创建 `scripts/install-openwrt.sh` 安装脚本
 - [x] 创建 `.github/workflows/build.yml` 自动构建
 - [x] 更新 `README.md` 文档
+- [x] 更新仓库地址 (用户名修复)
+- [x] 推送代码到 GitHub
 
 ### 验证阶段
-- [/] 代码语法验证
-- [ ] GitHub Actions 构建测试
+- [/] GitHub Actions 构建测试 (进行中)
 - [ ] 玩客云实机测试
 
-## 参考文件
+## 参考链接
+- Actions 构建状态: https://github.com/1williamaoayers/xunlei-arm32/actions
 - 实施计划: `implementation_plan.md` (在 Gemini 工件目录)
-- 原项目: `xunlei-main/`
