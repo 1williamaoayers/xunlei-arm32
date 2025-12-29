@@ -142,9 +142,17 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("登录成功, UserID: %s\n", client.TokenResp.UserID)
+	log.Printf("登录成功, UserID: %s, Sub: %s, AccessToken长度: %d\n", 
+		client.TokenResp.UserID, client.TokenResp.Sub, len(client.TokenResp.AccessToken))
+	log.Printf("IsLogin: %v\n", client.IsLogin())
+	
+	userID := client.TokenResp.UserID
+	if userID == "" {
+		userID = client.TokenResp.Sub
+	}
+	
 	jsonResponse(w, 0, "登录成功", map[string]interface{}{
-		"user_id": client.TokenResp.UserID,
+		"user_id": userID,
 	})
 }
 
