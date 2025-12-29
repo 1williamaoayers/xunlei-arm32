@@ -114,7 +114,10 @@ func jsonResponse(w http.ResponseWriter, code int, message string, data interfac
 }
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
+	log.Println("收到登录请求")
+	
 	if r.Method != http.MethodPost {
+		log.Println("登录请求方法错误:", r.Method)
 		jsonResponse(w, 405, "Method Not Allowed", nil)
 		return
 	}
@@ -125,16 +128,21 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Println("登录请求解析错误:", err)
 		jsonResponse(w, 400, "请求格式错误", nil)
 		return
 	}
 
+	log.Printf("尝试登录用户: %s\n", req.Username)
+	
 	client = thunder.NewClient(req.Username, req.Password)
 	if err := client.Login(); err != nil {
+		log.Printf("登录失败: %v\n", err)
 		jsonResponse(w, 500, fmt.Sprintf("登录失败: %v", err), nil)
 		return
 	}
 
+	log.Printf("登录成功, UserID: %s\n", client.TokenResp.UserID)
 	jsonResponse(w, 0, "登录成功", map[string]interface{}{
 		"user_id": client.TokenResp.UserID,
 	})
