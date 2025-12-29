@@ -10,7 +10,7 @@ set -e
 INSTALL_DIR="/opt/xunlei"
 DATA_DIR="/opt/xunlei/data"
 DOWNLOAD_DIR="/mnt/sda1/downloads"
-RELEASE_URL="https://github.com/YOUR_USERNAME/xunlei-arm32/releases/latest/download"
+RELEASE_URL="https://github.com/1williamaoayers/xunlei-arm32/releases/latest/download"
 
 echo "============================================"
 echo "  玩客云 OpenWrt 迅雷安装脚本"

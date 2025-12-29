@@ -99,13 +99,13 @@ Flags:
 
 ```bash
 # 一键安装
-wget -O- https://github.com/YOUR_USERNAME/xunlei-arm32/raw/main/scripts/install-openwrt.sh | sh
+wget -O- https://github.com/1williamaoayers/xunlei-arm32/raw/main/scripts/install-openwrt.sh | sh
 
 # 或手动安装
 opkg update
 opkg install qemu-aarch64
 
-wget -O /opt/xunlei/xlp https://github.com/YOUR_USERNAME/xunlei-arm32/releases/latest/download/xlp-arm
+wget -O /opt/xunlei/xlp https://github.com/1williamaoayers/xunlei-arm32/releases/latest/download/xlp-arm
 chmod +x /opt/xunlei/xlp
 /opt/xunlei/xlp --dir_data=/opt/xunlei/data --dir_download=/mnt/sda1/downloads --chroot=/
 ```
