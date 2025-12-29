@@ -1,7 +1,6 @@
 FROM --platform=$BUILDPLATFORM ubuntu:focal AS temp
 ARG TARGETARCH
-
-RUN [ "${TARGETARCH}" = "arm64" -o "${TARGETARCH}" = "amd64" ] && echo ok || exit 1
+ARG TARGETVARIANT
 
 ENV LANG=C.UTF-8 LANG=zh_CN.UTF-8 LANGUAGE=zh_CN.UTF-8 LC_ALL=C
 
@@ -21,22 +20,34 @@ RUN mkdir -p /rootfs/etc/ssl/certs \
 
 WORKDIR /spk
 
-# COPY spk/*.spk ./
-# RUN SYS_ARCH=$([ "${TARGETARCH}" = "amd64" ] && echo "x86_64" || echo "armv8") \
-#   && VER=$(ls | grep "${SYS_ARCH}" | grep -Eo "v[0-9]+.[0-9]+.[0-9]+" | sort -Vr | head -n1) \
-#   && NAME=$(ls | grep ${SYS_ARCH} | grep ${VER} | head -n1) \
-#   && mkdir -p /rootfs/var/packages/pan-xunlei-com/target \
-#   && [ -f "${NAME}" ] && tar -Oxf ${NAME} package.tgz | tar -JxC /rootfs/var/packages/pan-xunlei-com/target --wildcards 'bin/bin/*' 'ui/index.cgi' \
-#   || exit 1
-
-COPY bin/xlp-${TARGETARCH} /rootfs/usr/bin/xlp
+# 根据架构选择正确的二进制文件
+# arm/v7 使用 xlp-arm, arm64 使用 xlp-arm64, amd64 使用 xlp-amd64
+COPY bin/xlp-* /tmp/
+RUN if [ "${TARGETARCH}" = "arm" ]; then \
+      cp /tmp/xlp-arm /rootfs/usr/bin/xlp; \
+    elif [ "${TARGETARCH}" = "arm64" ]; then \
+      cp /tmp/xlp-arm64 /rootfs/usr/bin/xlp; \
+    else \
+      cp /tmp/xlp-amd64 /rootfs/usr/bin/xlp; \
+    fi && chmod +x /rootfs/usr/bin/xlp
 
 FROM ubuntu:focal
 
-LABEL org.opencontainers.image.authors=cnk3x
-LABEL org.opencontainers.image.source=https://github.com/cnk3x/xunlei
+LABEL org.opencontainers.image.authors=1williamaoayers
+LABEL org.opencontainers.image.source=https://github.com/1williamaoayers/xunlei-arm32
+
+ARG TARGETARCH
 
 COPY --from=temp /rootfs/ /
+
+# ARM32 需要安装 QEMU 来运行 ARM64 二进制
+RUN if [ "${TARGETARCH}" = "arm" ]; then \
+      sed -i 's/archive.ubuntu.com/mirrors.bfsu.edu.cn/g' /etc/apt/sources.list \
+      && sed -i 's/ports.ubuntu.com/mirrors.bfsu.edu.cn/g' /etc/apt/sources.list \
+      && apt-get update \
+      && apt-get install -y --no-install-recommends qemu-user-static \
+      && rm -rf /var/lib/apt/lists/*; \
+    fi
 
 ENV LANG=C.UTF-8 LANG=zh_CN.UTF-8 LANGUAGE=zh_CN.UTF-8 LC_ALL=C \
   XL_DEBUG=false \
@@ -50,4 +61,4 @@ ENV LANG=C.UTF-8 LANG=zh_CN.UTF-8 LANGUAGE=zh_CN.UTF-8 LC_ALL=C \
   XL_UID= \
   XL_GID=
 
-CMD [ "/bin/xlp" ]
+CMD [ "/usr/bin/xlp" ]
