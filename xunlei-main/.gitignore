@@ -1,0 +1,12 @@
+tmp/
+local/
+.vscode/*
+!.vscode/settings.json
+.idea/
+
+bin/
+rootfs/
+home.repo
+
+testdata/
+*.Dockerfile
