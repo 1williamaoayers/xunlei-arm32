@@ -1,6 +1,7 @@
 package thunder
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -67,30 +68,48 @@ func (c *Client) Login() error {
 
 	// 登录
 	url := XLUSER_API_URL + "/auth/signin"
-	var resp struct {
+	
+	// 构建请求体
+	body := map[string]interface{}{
+		"client_id":     c.ClientID,
+		"client_secret": c.ClientSecret,
+		"username":      c.Username,
+		"password":      c.Password,
+	}
+
+	req := c.client.R().
+		SetHeader("User-Agent", c.UserAgent).
+		SetHeader("Accept", "application/json;charset=UTF-8").
+		SetHeader("X-Device-ID", c.DeviceID).
+		SetHeader("X-Client-ID", c.ClientID).
+		SetHeader("X-Client-Version", c.ClientVersion).
+		SetHeader("X-Captcha-Token", c.GetCaptchaToken()).
+		SetBody(body)
+
+	resp, err := req.Post(url)
+	if err != nil {
+		return fmt.Errorf("登录请求失败: %w", err)
+	}
+
+	// 打印原始响应用于调试
+	fmt.Printf("[DEBUG] Login Response Status: %d\n", resp.StatusCode())
+	fmt.Printf("[DEBUG] Login Response Body: %s\n", string(resp.Body()))
+
+	// 解析响应
+	var tokenResp struct {
 		ErrResp
 		TokenResp
 	}
-
-	_, err := c.Request(url, http.MethodPost, func(r *resty.Request) {
-		r.SetHeader("X-Captcha-Token", c.GetCaptchaToken())
-		r.SetBody(map[string]interface{}{
-			"client_id":     c.ClientID,
-			"client_secret": c.ClientSecret,
-			"username":      c.Username,
-			"password":      c.Password,
-		})
-	}, &resp)
-
-	if err != nil {
-		return fmt.Errorf("登录失败: %w", err)
+	
+	if err := json.Unmarshal(resp.Body(), &tokenResp); err != nil {
+		return fmt.Errorf("解析登录响应失败: %w, body: %s", err, string(resp.Body()))
 	}
 
-	if resp.ErrResp.IsError() {
-		return fmt.Errorf("登录失败: %s", resp.ErrResp.Error())
+	if tokenResp.ErrResp.IsError() {
+		return fmt.Errorf("登录失败: %s", tokenResp.ErrResp.Error())
 	}
 
-	c.TokenResp = &resp.TokenResp
+	c.TokenResp = &tokenResp.TokenResp
 	return nil
 }
 
