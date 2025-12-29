@@ -24,6 +24,21 @@ arm::
 	rm -f bin/xlp-arm*
 	GOARCH=arm GOARM=7 $(GO_BUILD) -v -o bin/xlp-arm ./cmd/xlp
 
+# 原生迅雷客户端（纯 Go，无需 QEMU）
+native-arm::
+	rm -f bin/xunlei-native-arm*
+	GOARCH=arm GOARM=7 $(GO_BUILD) -v -o bin/xunlei-native-arm ./cmd/xunlei-native
+
+native-arm64::
+	rm -f bin/xunlei-native-arm64*
+	GOARCH=arm64 $(GO_BUILD) -v -o bin/xunlei-native-arm64 ./cmd/xunlei-native
+
+native-amd64::
+	rm -f bin/xunlei-native-amd64*
+	GOARCH=amd64 $(GO_BUILD) -v -o bin/xunlei-native-amd64 ./cmd/xunlei-native
+
+native:: native-arm native-arm64 native-amd64
+
 build:: amd64 arm64 arm
 
 latest:: build

@@ -64,9 +64,19 @@ jobs:
           echo "Building arm (ARM32)..."
           CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="$LDFLAGS" -o bin/xlp-arm ./cmd/xlp
           
+          echo "Building xunlei-native (ARM32)..."
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -ldflags="$LDFLAGS" -o bin/xunlei-native-arm ./cmd/xunlei-native
+          
+          echo "Building xunlei-native (ARM64)..."
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="$LDFLAGS" -o bin/xunlei-native-arm64 ./cmd/xunlei-native
+          
+          echo "Building xunlei-native (AMD64)..."
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="$LDFLAGS" -o bin/xunlei-native-amd64 ./cmd/xunlei-native
+          
           # 显示文件信息
           ls -la bin/
           file bin/*
+
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -83,6 +93,9 @@ jobs:
             bin/xlp-amd64
             bin/xlp-arm64
             bin/xlp-arm
+            bin/xunlei-native-amd64
+            bin/xunlei-native-arm64
+            bin/xunlei-native-arm
             scripts/install-openwrt.sh
           generate_release_notes: true
         env:
