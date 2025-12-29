@@ -1,45 +1,40 @@
-FROM --platform=$BUILDPLATFORM ubuntu:focal AS temp
-ARG TARGETARCH
+# 迅雷 ARM32 原生客户端 Docker 镜像
+# 无需 QEMU，直接运行
 
-ENV LANG=C.UTF-8 LANGUAGE=zh_CN.UTF-8 LC_ALL=C
-
-RUN sed -i 's/archive.ubuntu.com/mirrors.bfsu.edu.cn/g' /etc/apt/sources.list \
-  && sed -i 's/security.ubuntu.com/mirrors.bfsu.edu.cn/g' /etc/apt/sources.list \
-  && sed -i 's/ports.ubuntu.com/mirrors.bfsu.edu.cn/g' /etc/apt/sources.list \
-  && DEBIAN_FRONTEND=noninteractive apt-get update \
-  && apt-get -y --no-install-recommends install tzdata ca-certificates \
-  && rm -rf /var/lib/apt/lists/* \
-  && echo "Asia/Shanghai" >/etc/timezone \
-  && rm -f /etc/localtime && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-
-RUN mkdir -p /rootfs/etc/ssl/certs /rootfs/usr/bin \
-  && cp --parents /etc/ssl/certs/ca-certificates.crt /rootfs/ \
-  && cp --parents /etc/timezone /rootfs/ \
-  && cp --parents /etc/localtime /rootfs/
-
-COPY bin/xlp-amd64 /rootfs/usr/bin/xlp-amd64
-COPY bin/xlp-arm64 /rootfs/usr/bin/xlp-arm64
-COPY bin/xlp-arm /rootfs/usr/bin/xlp-arm
-
-RUN case "${TARGETARCH}" in \
-  arm) ln -sf /usr/bin/xlp-arm /rootfs/usr/bin/xlp ;; \
-  arm64) ln -sf /usr/bin/xlp-arm64 /rootfs/usr/bin/xlp ;; \
-  *) ln -sf /usr/bin/xlp-amd64 /rootfs/usr/bin/xlp ;; \
-  esac \
-  && chmod +x /rootfs/usr/bin/xlp-*
-
-FROM ubuntu:focal
+FROM alpine:3.19
 
 LABEL org.opencontainers.image.source=https://github.com/1williamaoayers/xunlei-arm32
+LABEL org.opencontainers.image.description="迅雷云盘 ARM32 原生客户端"
 
-COPY --from=temp /rootfs/ /
+ARG TARGETARCH
 
-ENV LANG=C.UTF-8 LANGUAGE=zh_CN.UTF-8 LC_ALL=C \
-  XL_DEBUG=false \
-  XL_DASHBOARD_PORT=2345 \
-  XL_DIR_DOWNLOAD=/xunlei/downloads \
-  XL_DIR_DATA=/xunlei/data \
-  XL_CHROOT=/xunlei \
-  XL_PREVENT_UPDATE=true
+# 安装基础依赖
+RUN apk add --no-cache ca-certificates tzdata \
+  && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+  && echo "Asia/Shanghai" > /etc/timezone
 
-CMD [ "/usr/bin/xlp" ]
+# 复制对应架构的二进制
+COPY bin/xunlei-native-amd64 /usr/bin/xunlei-native-amd64
+COPY bin/xunlei-native-arm64 /usr/bin/xunlei-native-arm64
+COPY bin/xunlei-native-arm /usr/bin/xunlei-native-arm
+
+# 根据架构创建符号链接
+RUN case "${TARGETARCH}" in \
+  arm) ln -sf /usr/bin/xunlei-native-arm /usr/bin/xunlei ;; \
+  arm64) ln -sf /usr/bin/xunlei-native-arm64 /usr/bin/xunlei ;; \
+  *) ln -sf /usr/bin/xunlei-native-amd64 /usr/bin/xunlei ;; \
+  esac \
+  && chmod +x /usr/bin/xunlei-native-*
+
+# 创建数据目录
+RUN mkdir -p /xunlei/data /xunlei/downloads
+
+# 环境变量
+ENV XL_PORT=2345 \
+  XL_DATA_DIR=/xunlei/data
+
+EXPOSE 2345
+
+VOLUME ["/xunlei/data", "/xunlei/downloads"]
+
+CMD ["/usr/bin/xunlei"]
